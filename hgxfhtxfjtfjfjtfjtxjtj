@@ -1,0 +1,124 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "Poderes Menu (VERSÃO FINAL)",
+   LoadingTitle = "Limpando Lista de Poderes...",
+   LoadingSubtitle = "by Gemini",
+   ConfigurationSaving = { Enabled = false }
+})
+
+local SelectedPlayer = nil
+local Loops = {} 
+local Toggles = {} 
+
+-- Lista Atualizada (Sem Electric Aura e Sandstorm)
+local ListaPoderes = {
+    "1% Punch", "Sand Road", "Healing Energy", "Swine Explosion", 
+    "X Slice", "Rage Mode", "Unrefusable Order", "Hot Coffee", 
+    "Guided Orbs", "Dismantle", "Charged Aura", "Pineapple Throw", 
+    "Sailor's Aura", "Tidal Wave", "Ultimate Lifeform", 
+    "Disk Slice", "Smoke Cover", "Discharge",
+    "Bring Spell", "Hollow Purple"
+}
+
+local Tab = Window:CreateTab("Principal", 4483362458)
+
+-- Seleção de Jogador
+local PlayerDropdown = Tab:CreateDropdown({
+   Name = "Selecionar Alvo",
+   Options = {}, 
+   CurrentOption = "",
+   MultipleOptions = false,
+   Callback = function(Option)
+       SelectedPlayer = Option[1]
+   end,
+})
+
+local function UpdateDropdown()
+    local players = {}
+    for _, v in pairs(game:GetService("Players"):GetPlayers()) do
+        if v.Name ~= game.Players.LocalPlayer.Name then
+            table.insert(players, v.Name)
+        end
+    end
+    PlayerDropdown:Refresh(players, true)
+end
+
+Tab:CreateButton({
+   Name = "Atualizar Jogadores",
+   Callback = function() UpdateDropdown() end,
+})
+
+-- Função Principal de Loop
+local function StartPowerLoop(powerName)
+    task.spawn(function()
+        while Loops[powerName] do
+            if SelectedPlayer then
+                local p = game:GetService("Players"):FindFirstChild(SelectedPlayer)
+                if p and p.Character and p.Character:FindFirstChild("Humanoid") then
+                    pcall(function()
+                        local pos = p.Character.HumanoidRootPart.CFrame
+                        -- Se for Bring Spell, puxa para a sua posição
+                        if powerName == "Bring Spell" then
+                            pos = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
+                        end
+
+                        game:GetService("ReplicatedStorage").Remotes.AbilityHit:FireServer(
+                            powerName,
+                            p.Character.Humanoid,
+                            pos
+                        )
+                    end)
+                end
+            end
+            task.wait(0.1) 
+        end
+    end)
+end
+
+Tab:CreateSection("CONTROLES MESTRE")
+
+Tab:CreateButton({
+   Name = "🔥 ATIVAR TUDO (MODO CAOS)",
+   Callback = function()
+       if not SelectedPlayer then
+           Rayfield:Notify({Title = "Erro", Content = "Selecione um alvo!", Duration = 3})
+           return
+       end
+       for _, nome in pairs(ListaPoderes) do
+           if not Loops[nome] then
+               Loops[nome] = true
+               if Toggles[nome] then Toggles[nome]:Set(true) end
+               StartPowerLoop(nome)
+           end
+       end
+   end,
+})
+
+Tab:CreateButton({
+   Name = "🛑 PARAR TUDO",
+   Callback = function()
+       for _, nome in pairs(ListaPoderes) do
+           Loops[nome] = false
+           if Toggles[nome] then Toggles[nome]:Set(false) end
+       end
+   end,
+})
+
+Tab:CreateSection("PODERES INDIVIDUAIS")
+
+for _, nomePoder in pairs(ListaPoderes) do
+    Loops[nomePoder] = false
+    Toggles[nomePoder] = Tab:CreateToggle({
+       Name = "Loop: " .. nomePoder,
+       CurrentValue = false,
+       Callback = function(Value)
+           Loops[nomePoder] = Value
+           if Value then
+               StartPowerLoop(nomePoder)
+           end
+       end,
+    })
+end
+
+UpdateDropdown()
