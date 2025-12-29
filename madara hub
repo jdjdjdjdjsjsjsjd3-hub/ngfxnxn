@@ -1,0 +1,124 @@
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("🔥 Madara Hub Leve", "DarkTheme")
+
+-- ⚙️ Serviços
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local Remotes = ReplicatedStorage:WaitForChild("Remotes")
+local AbilityEffects = Remotes:WaitForChild("AbilityEffects")
+local AbilityHit = Remotes:WaitForChild("AbilityHit")
+
+-------------------------------------------------
+-- 🌀 ABA MADARA
+-------------------------------------------------
+local TabMadara = Window:NewTab("Madara")
+local SectionMadara = TabMadara:NewSection("Skills Combo")
+
+-- Variáveis de controle
+local toggleMadara = false
+local toggleSemTimeStop = false
+local toggleClassico = false
+
+-- Funções de Disparo
+local function ativarMadara()
+    AbilityEffects:FireServer("Spirit Summon")
+    AbilityEffects:FireServer("Ice Path")
+    AbilityEffects:FireServer("Dirt Wall")
+    AbilityEffects:FireServer("Time Stop", CFrame.new(631.381, 3.5, -422.702))
+    AbilityEffects:FireServer("Shrine Expansion")
+end
+
+local function ativarMadaraSemTimeStop()
+    AbilityEffects:FireServer("Spirit Summon")
+    AbilityEffects:FireServer("Ice Path")
+    AbilityEffects:FireServer("Dirt Wall")
+    AbilityEffects:FireServer("Shrine Expansion")
+end
+
+local function ativarMadaraClassico()
+    AbilityEffects:FireServer("Spirit Summon")
+    AbilityEffects:FireServer("Ice Path")
+    AbilityEffects:FireServer("Dirt Wall")
+end
+
+-- Interface (Toggles)
+SectionMadara:NewToggle("Combo Full (5 Skills)", "Inclui Time Stop", function(v)
+    toggleMadara = v
+end)
+
+SectionMadara:NewToggle("Combo SEM Time Stop", "4 Skills (Sem parar o tempo)", function(v)
+    toggleSemTimeStop = v
+end)
+
+SectionMadara:NewToggle("Combo Clássico (3 Skills)", "Apenas as básicas", function(v)
+    toggleClassico = v
+end)
+
+-------------------------------------------------
+-- ⚔️ ABA BRING + POWERS
+-------------------------------------------------
+local TabBP = Window:NewTab("Bring + Powers")
+local SectionBP = TabBP:NewSection("Selecionar Jogador e Poder")
+
+local playersList = {}
+for _, plr in ipairs(Players:GetPlayers()) do table.insert(playersList, plr.Name) end
+
+local selectedPlayer = nil
+SectionBP:NewDropdown("Escolher Jogador", "Alvo", playersList, function(v)
+    selectedPlayer = v
+end)
+
+local powers = {"Bring Spell", "Copied Purple", "Hollow Purple"}
+local selectedPower = "Bring Spell"
+SectionBP:NewDropdown("Escolher Poder", "Habilidade", powers, function(v)
+    selectedPower = v
+end)
+
+local toggleBP = false
+
+local function ativarPoder()
+    if not selectedPlayer then return end
+    local target = Players:FindFirstChild(selectedPlayer)
+    if not target or not target.Character then return end
+    local humanoid = target.Character:FindFirstChild("Humanoid")
+    if not humanoid then return end
+
+    if selectedPower == "Bring Spell" then
+        AbilityHit:FireServer("Bring Spell", humanoid, CFrame.new(607.521,3.5,-384.006))
+    elseif selectedPower == "Copied Purple" then
+        AbilityHit:FireServer("Copied Purple", humanoid, CFrame.new(622.168,2.753,-402.712))
+    elseif selectedPower == "Hollow Purple" then
+        AbilityHit:FireServer("Hollow Purple", humanoid, target.Character.HumanoidRootPart.CFrame)
+    end
+end
+
+SectionBP:NewToggle("Toggle Poder", "Ativa repetidamente", function(v)
+    toggleBP = v
+end)
+
+-------------------------------------------------
+-- 🔁 LOOP DE EXECUÇÃO (Otimizado)
+-------------------------------------------------
+RunService.Heartbeat:Connect(function()
+    -- Executa apenas um por vez para não bugar os remotes
+    if toggleMadara then 
+        ativarMadara() 
+    elseif toggleSemTimeStop then 
+        ativarMadaraSemTimeStop() 
+    elseif toggleClassico then 
+        ativarMadaraClassico() 
+    end
+    
+    if toggleBP then 
+        ativarPoder() 
+    end
+end)
+
+-- Tecla para Abrir/Fechar o Menu
+local SectionConfig = TabMadara:NewSection("Config")
+SectionConfig:NewKeybind("Abrir/Fechar Menu", "Shift Direito", Enum.KeyCode.RightShift, function()
+	Library:ToggleUI()
+end)
+
+print("✅ Script Madara v2 Carregado!")
