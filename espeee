@@ -1,0 +1,96 @@
+--// CONFIG
+local ESP_ATIVO = true
+local MOSTRAR_NOME = true
+local MOSTRAR_BOX = true
+
+--// SERVICES
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+
+--// TABELA ESP
+local ESP = {}
+
+--// FUNÇÃO PARA CRIAR ESP
+local function CriarESP(player)
+    if player == LocalPlayer then return end
+
+    local box = Drawing.new("Square")
+    box.Color = Color3.fromRGB(255, 0, 0)
+    box.Thickness = 1
+    box.Filled = false
+    box.Visible = false
+
+    local nome = Drawing.new("Text")
+    nome.Color = Color3.fromRGB(255, 255, 255)
+    nome.Size = 14
+    nome.Center = true
+    nome.Outline = true
+    nome.Visible = false
+    nome.Text = player.Name
+
+    ESP[player] = {Box = box, Nome = nome}
+end
+
+--// REMOVER ESP
+local function RemoverESP(player)
+    if ESP[player] then
+        ESP[player].Box:Remove()
+        ESP[player].Nome:Remove()
+        ESP[player] = nil
+    end
+end
+
+--// LOOP PRINCIPAL
+RunService.RenderStepped:Connect(function()
+    if not ESP_ATIVO then return end
+
+    for player, drawings in pairs(ESP) do
+        local char = player.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+
+        if hrp and hum and hum.Health > 0 then
+            local pos, visivel = Camera:WorldToViewportPoint(hrp.Position)
+
+            if visivel then
+                local tamanho = Vector2.new(2000 / pos.Z, 3000 / pos.Z)
+
+                -- BOX
+                if MOSTRAR_BOX then
+                    drawings.Box.Size = tamanho
+                    drawings.Box.Position = Vector2.new(
+                        pos.X - tamanho.X / 2,
+                        pos.Y - tamanho.Y / 2
+                    )
+                    drawings.Box.Visible = true
+                else
+                    drawings.Box.Visible = false
+                end
+
+                -- NOME
+                if MOSTRAR_NOME then
+                    drawings.Nome.Position = Vector2.new(pos.X, pos.Y - tamanho.Y / 2 - 14)
+                    drawings.Nome.Visible = true
+                else
+                    drawings.Nome.Visible = false
+                end
+            else
+                drawings.Box.Visible = false
+                drawings.Nome.Visible = false
+            end
+        else
+            drawings.Box.Visible = false
+            drawings.Nome.Visible = false
+        end
+    end
+end)
+
+--// ADICIONAR JOGADORES
+for _, p in pairs(Players:GetPlayers()) do
+    CriarESP(p)
+end
+
+Players.PlayerAdded:Connect(CriarESP)
+Players.PlayerRemoving:Connect(RemoverESP)
