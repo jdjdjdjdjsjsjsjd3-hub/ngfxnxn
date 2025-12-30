@@ -1,0 +1,112 @@
+local Kavo = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Kavo.CreateLib("Goto Hub", "DarkTheme")
+
+-- Variáveis de Controle
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local teleportDelay = 0.1
+local loopActive = false
+local targetPlayer = nil
+local selectedOption = "12 Studs"
+local direction = "Frente"
+local customDistance = 12 
+local verticalDirection = "Nenhum"
+
+-- 📍 Função para pegar nomes dos jogadores
+local function getPlayerNames()
+    local names = {}
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            table.insert(names, plr.Name)
+        end
+    end
+    return names
+end
+
+-- 📍 Loop principal de Teleporte
+local function loopGoto()
+    while loopActive do
+        local target = Players:FindFirstChild(targetPlayer)
+        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart")
+            and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            
+            local hrp = target.Character.HumanoidRootPart
+            local offset = Vector3.new(0, 0, 0)
+            local dist = customDistance
+
+            if selectedOption == "Alvo Próximo" then
+                LocalPlayer.Character.HumanoidRootPart.CFrame = hrp.CFrame
+                task.wait(teleportDelay)
+                continue
+            end
+
+            if direction == "Frente" then
+                offset = hrp.CFrame.LookVector * dist
+            elseif direction == "Atrás" then
+                offset = -hrp.CFrame.LookVector * dist
+            elseif direction == "Direita" then
+                offset = hrp.CFrame.RightVector * dist
+            elseif direction == "Esquerda" then
+                offset = -hrp.CFrame.RightVector * dist
+            end
+
+            if verticalDirection == "Cima" then
+                offset = offset + Vector3.new(0, dist, 0)
+            elseif verticalDirection == "Baixo" then
+                offset = offset - Vector3.new(0, dist, 0)
+            end
+
+            LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(hrp.Position + offset, hrp.Position)
+        end
+        task.wait(teleportDelay)
+    end
+end
+
+-- 🗂 Interface
+local Tab = Window:NewTab("Goto Hub")
+local Section = Tab:NewSection("Configuração")
+
+-- 🔑 CONFIGURAÇÃO DA TECLA (KEYBIND)
+-- Altere "RightShift" para a tecla que preferir (ex: "LeftControl", "F"...)
+local SettingsTab = Window:NewTab("Configurações")
+local SettingsSection = SettingsTab:NewSection("Menu")
+
+SettingsSection:NewKeybind("Abrir/Fechar Menu", "Tecla para ocultar a UI", Enum.KeyCode.RightShift, function()
+	Kavo:ToggleUI()
+end)
+
+-- Conteúdo Original da Aba Goto
+Section:NewDropdown("Escolher jogador", "Selecione alvo", getPlayerNames(), function(v)
+    targetPlayer = v
+end)
+
+Section:NewDropdown("Direção", "Escolha direção", {"Frente","Atrás","Direita","Esquerda"}, function(v)
+    direction = v
+end)
+
+Section:NewDropdown("Vertical", "Mover pra cima ou pra baixo", {"Nenhum","Cima","Baixo"}, function(v)
+    verticalDirection = v
+end)
+
+Section:NewDropdown("Modo", "Escolha 5/7/12 Studs ou Alvo Próximo", {"5 Studs","7 Studs","12 Studs","Alvo Próximo"}, function(v)
+    selectedOption = v
+    if v == "5 Studs" then customDistance = 5
+    elseif v == "7 Studs" then customDistance = 7
+    elseif v == "12 Studs" then customDistance = 12 end
+end)
+
+Section:NewTextBox("Distância Personalizada", "Digite a distância em studs", function(v)
+    local num = tonumber(v)
+    if num then customDistance = num end
+end)
+
+Section:NewButton("Ativar LoopGoto", "Iniciar loop de teleport", function()
+    if not loopActive and targetPlayer then
+        loopActive = true
+        task.spawn(loopGoto)
+    end
+end)
+
+Section:NewButton("Desativar LoopGoto", "Parar loop", function()
+    loopActive = false
+end)
