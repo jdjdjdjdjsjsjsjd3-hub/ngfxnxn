@@ -2,7 +2,7 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
    Name = "Poderes Menu (VERSÃO FINAL)",
-   LoadingTitle = "Limpando Lista de Poderes...",
+   LoadingTitle = "Iniciando Sistema...",
    LoadingSubtitle = "by Gemini",
    ConfigurationSaving = { Enabled = false }
 })
@@ -10,8 +10,8 @@ local Window = Rayfield:CreateWindow({
 local SelectedPlayer = nil
 local Loops = {} 
 local Toggles = {} 
+local clickAttackEnabled = false
 
--- Lista Atualizada (Sem Electric Aura e Sandstorm)
 local ListaPoderes = {
     "1% Punch", "Sand Road", "Healing Energy", "Swine Explosion", 
     "X Slice", "Rage Mode", "Unrefusable Order", "Hot Coffee", 
@@ -21,9 +21,35 @@ local ListaPoderes = {
     "Bring Spell", "Hollow Purple"
 }
 
+-- Criar Abas
 local Tab = Window:CreateTab("Principal", 4483362458)
+local ClickTab = Window:CreateTab("Click Mode", 4483362458)
 
--- Seleção de Jogador
+-- ABA CLICK MODE (Hollow Purple no Mouse)
+ClickTab:CreateSection("Ataque Manual")
+ClickTab:CreateToggle({
+   Name = "Hollow Purple no Clique",
+   CurrentValue = false,
+   Callback = function(Value)
+       clickAttackEnabled = Value
+   end,
+})
+
+-- Evento de Clique
+local lp = game.Players.LocalPlayer
+local Mouse = lp:GetMouse()
+
+Mouse.Button1Down:Connect(function()
+    if not clickAttackEnabled then return end
+    local remote = game:GetService("ReplicatedStorage"):FindFirstChild("AbilityHit", true)
+    if remote then
+        local target = Mouse.Target
+        local hum = target and target.Parent and target.Parent:FindFirstChildOfClass("Humanoid")
+        remote:FireServer("Hollow Purple", hum, Mouse.Hit)
+    end
+end)
+
+-- ABA PRINCIPAL (Seu Código Original)
 local PlayerDropdown = Tab:CreateDropdown({
    Name = "Selecionar Alvo",
    Options = {}, 
@@ -37,19 +63,13 @@ local PlayerDropdown = Tab:CreateDropdown({
 local function UpdateDropdown()
     local players = {}
     for _, v in pairs(game:GetService("Players"):GetPlayers()) do
-        if v.Name ~= game.Players.LocalPlayer.Name then
-            table.insert(players, v.Name)
-        end
+        if v.Name ~= lp.Name then table.insert(players, v.Name) end
     end
     PlayerDropdown:Refresh(players, true)
 end
 
-Tab:CreateButton({
-   Name = "Atualizar Jogadores",
-   Callback = function() UpdateDropdown() end,
-})
+Tab:CreateButton({Name = "Atualizar Jogadores", Callback = function() UpdateDropdown() end})
 
--- Função Principal de Loop
 local function StartPowerLoop(powerName)
     task.spawn(function()
         while Loops[powerName] do
@@ -57,17 +77,8 @@ local function StartPowerLoop(powerName)
                 local p = game:GetService("Players"):FindFirstChild(SelectedPlayer)
                 if p and p.Character and p.Character:FindFirstChild("Humanoid") then
                     pcall(function()
-                        local pos = p.Character.HumanoidRootPart.CFrame
-                        -- Se for Bring Spell, puxa para a sua posição
-                        if powerName == "Bring Spell" then
-                            pos = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
-                        end
-
-                        game:GetService("ReplicatedStorage").Remotes.AbilityHit:FireServer(
-                            powerName,
-                            p.Character.Humanoid,
-                            pos
-                        )
+                        local pos = (powerName == "Bring Spell") and lp.Character.HumanoidRootPart.CFrame or p.Character.HumanoidRootPart.CFrame
+                        game:GetService("ReplicatedStorage").Remotes.AbilityHit:FireServer(powerName, p.Character.Humanoid, pos)
                     end)
                 end
             end
@@ -81,16 +92,11 @@ Tab:CreateSection("CONTROLES MESTRE")
 Tab:CreateButton({
    Name = "🔥 ATIVAR TUDO (MODO CAOS)",
    Callback = function()
-       if not SelectedPlayer then
-           Rayfield:Notify({Title = "Erro", Content = "Selecione um alvo!", Duration = 3})
-           return
-       end
+       if not SelectedPlayer then return end
        for _, nome in pairs(ListaPoderes) do
-           if not Loops[nome] then
-               Loops[nome] = true
-               if Toggles[nome] then Toggles[nome]:Set(true) end
-               StartPowerLoop(nome)
-           end
+           Loops[nome] = true
+           if Toggles[nome] then Toggles[nome]:Set(true) end
+           StartPowerLoop(nome)
        end
    end,
 })
@@ -107,6 +113,9 @@ Tab:CreateButton({
 
 Tab:CreateSection("PODERES INDIVIDUAIS")
 
+-- Delay para não travar o carregamento
+task.wait(0.5)
+
 for _, nomePoder in pairs(ListaPoderes) do
     Loops[nomePoder] = false
     Toggles[nomePoder] = Tab:CreateToggle({
@@ -114,9 +123,7 @@ for _, nomePoder in pairs(ListaPoderes) do
        CurrentValue = false,
        Callback = function(Value)
            Loops[nomePoder] = Value
-           if Value then
-               StartPowerLoop(nomePoder)
-           end
+           if Value then StartPowerLoop(nomePoder) end
        end,
     })
 end
