@@ -1,0 +1,128 @@
+-- 📦 Carregar Bibliotecas
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+
+-- 📖 Criar Janela Principal
+local Window = Fluent:CreateWindow({
+    Title = "Homes System",
+    SubTitle = "by dawid",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(500, 400),
+    Acrylic = true,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl
+})
+
+-- 📂 Criar Aba Homes
+local HomeTab = Window:AddTab({ Title = "Homes", Icon = "home" })
+
+local homes = {}
+local looping = false
+local loopDelay = 3 -- segundos entre teleportes (configurável no menu)
+
+-- 🏠 Função para adicionar um Home
+local function addHome()
+    local character = game.Players.LocalPlayer.Character
+    local hrp = character and character:FindFirstChild("HumanoidRootPart")
+    if hrp then
+        local homeName = "Home #" .. tostring(#homes + 1)
+        table.insert(homes, {
+            name = homeName,
+            cframe = hrp.CFrame
+        })
+        Fluent:Notify({
+            Title = "Home Adicionado",
+            Content = homeName .. " salvo com sucesso!",
+            Duration = 3
+        })
+    end
+end
+
+-- 🔁 Função para loop entre Homes
+local function startLoop()
+    task.spawn(function()
+        while looping do
+            for _, home in ipairs(homes) do
+                if not looping then break end
+                local character = game.Players.LocalPlayer.Character
+                local hrp = character and character:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    hrp.CFrame = home.cframe
+                end
+                task.wait(loopDelay) -- tempo entre trocar de home
+            end
+        end
+    end)
+end
+
+-- ➕ Botão para adicionar Home
+HomeTab:AddButton({
+    Title = "➕ Adicionar Home",
+    Callback = function()
+        addHome()
+    end
+})
+
+-- 🔁 Toggle para ativar/desativar Loop
+HomeTab:AddToggle("LoopHomes", {
+    Title = "🔁 Loop entre Homes",
+    Default = false
+}):OnChanged(function(value)
+    looping = value
+    if looping then
+        Fluent:Notify({
+            Title = "Loop Ativado",
+            Content = "Alternando entre homes...",
+            Duration = 3
+        })
+        startLoop()
+    else
+        Fluent:Notify({
+            Title = "Loop Desativado",
+            Content = "Parado de alternar entre homes.",
+            Duration = 3
+        })
+    end
+end)
+
+-- ⚡ Dropdown para escolher velocidade
+HomeTab:AddDropdown("Velocidade", {
+    Title = "⚡ Velocidade do Loop",
+    Values = { "0.1s", "0.3s", "0.5s", "1s", "2s", "3s" },
+    Default = "3s"
+}):OnChanged(function(value)
+    loopDelay = tonumber(value:match("[%d%.]+")) or 3
+    Fluent:Notify({
+        Title = "Velocidade Alterada",
+        Content = "Delay entre homes: " .. loopDelay .. "s",
+        Duration = 3
+    })
+end)
+
+-- 📜 Lista de Homes com botões para teleportar
+HomeTab:AddParagraph({
+    Title = "📜 Homes Salvos",
+    Content = "Clique para teleportar."
+})
+
+HomeTab:AddButton({
+    Title = "🔄 Atualizar Lista de Homes",
+    Callback = function()
+        for _, home in ipairs(homes) do
+            HomeTab:AddButton({
+                Title = home.name,
+                Callback = function()
+                    local character = game.Players.LocalPlayer.Character
+                    local hrp = character and character:FindFirstChild("HumanoidRootPart")
+                    if hrp then
+                        hrp.CFrame = home.cframe
+                        Fluent:Notify({
+                            Title = "Teleportado",
+                            Content = "Você foi teleportado para " .. home.name,
+                            Duration = 3
+                        })
+                    end
+                end
+            })
+        end
+    end
+})
