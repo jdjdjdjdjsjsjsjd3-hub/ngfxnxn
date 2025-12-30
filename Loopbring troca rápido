@@ -1,0 +1,67 @@
+-- 🌀 LoopGoto Entre Jogadores (Ignora Rick00Sanchez e nada1h8)
+local Kavo = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Kavo.CreateLib("LoopGoto Hub", "DarkTheme")
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+
+-- 🧭 Aba
+local Tab = Window:NewTab("LoopGoto")
+local Section = Tab:NewSection("Configurações")
+
+-- ⚙️ Opções
+local LoopGotoEnabled = false
+local GotoDelay = 0.2
+local Distance = 0
+
+-- 🟢 Toggle
+Section:NewToggle("Ativar LoopGoto", "Teleporta entre todos os jogadores rapidamente", function(state)
+    LoopGotoEnabled = state
+end)
+
+-- 🕒 Slider de velocidade
+Section:NewSlider("Velocidade", "Quanto menor, mais rápido troca de alvo", 2, 0.05, function(value)
+    GotoDelay = value
+end)
+
+-- 📏 Distância opcional
+Section:NewSlider("Distância", "Distância do jogador ao teleportar", 20, 0, function(value)
+    Distance = value
+end)
+
+-- 🚀 Função principal
+local function GotoPlayer(player)
+    local myChar = LocalPlayer.Character
+    local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
+    local targetChar = player.Character
+    local targetHRP = targetChar and targetChar:FindFirstChild("HumanoidRootPart")
+
+    if myHRP and targetHRP then
+        local look = (targetHRP.CFrame.LookVector * -Distance)
+        myHRP.CFrame = targetHRP.CFrame + look
+    end
+end
+
+-- 🧠 Lista de jogadores ignorados
+local IgnoredPlayers = {
+    ["Rick00Sanchez"] = true,
+    ["nada1h8"] = true
+}
+
+-- 🔁 Loop
+task.spawn(function()
+    while true do
+        if LoopGotoEnabled then
+            for _, player in ipairs(Players:GetPlayers()) do
+                if player ~= LocalPlayer and not IgnoredPlayers[player.Name] then
+                    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                        GotoPlayer(player)
+                        task.wait(GotoDelay)
+                    end
+                end
+            end
+        end
+        RunService.Stepped:Wait()
+    end
+end)
