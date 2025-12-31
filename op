@@ -12,21 +12,20 @@ local Loops = {}
 local Toggles = {} 
 local clickAttackEnabled = false
 
--- Lista atualizada: Hot Coffee, Healing Energy e Sand Road removidos
+-- Lista Atualizada com "Transformation" incluída
 local ListaPoderes = {
-    "1% Punch", "Swine Explosion", 
-    "X Slice", "Rage Mode", "Unrefusable Order", 
-    "Guided Orbs", "Dismantle", "Charged Aura", "Pineapple Throw", 
-    "Sailor's Aura", "Tidal Wave", "Ultimate Lifeform", 
-    "Disk Slice", "Smoke Cover", "Discharge",
-    "Bring Spell", "Hollow Purple"
+    "1% Punch", "Swine Explosion", "X Slice", "Rage Mode", 
+    "Unrefusable Order", "Guided Orbs", "Dismantle", "Charged Aura", 
+    "Pineapple Throw", "Sailor's Aura", "Tidal Wave", "Ultimate Lifeform", 
+    "Disk Slice", "Smoke Cover", "Discharge", "Bring Spell", 
+    "Hollow Purple", "Transformation" -- Adicionado aqui
 }
 
 -- Criar Abas
 local Tab = Window:CreateTab("Principal", 4483362458)
 local ClickTab = Window:CreateTab("Click Mode", 4483362458)
 
--- ABA CLICK MODE (Hollow Purple no Mouse)
+-- ABA CLICK MODE
 ClickTab:CreateSection("Ataque Manual")
 ClickTab:CreateToggle({
    Name = "Hollow Purple no Clique",
@@ -36,7 +35,6 @@ ClickTab:CreateToggle({
    end,
 })
 
--- Evento de Clique
 local lp = game.Players.LocalPlayer
 local Mouse = lp:GetMouse()
 
@@ -114,9 +112,9 @@ Tab:CreateButton({
 
 Tab:CreateSection("PODERES INDIVIDUAIS")
 
--- Delay para não travar o carregamento
 task.wait(0.5)
 
+-- Criação automática dos toggles para todos da lista (incluindo Transformation)
 for _, nomePoder in pairs(ListaPoderes) do
     Loops[nomePoder] = false
     Toggles[nomePoder] = Tab:CreateToggle({
