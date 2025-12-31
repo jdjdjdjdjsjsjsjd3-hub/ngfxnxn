@@ -12,9 +12,10 @@ local Loops = {}
 local Toggles = {} 
 local clickAttackEnabled = false
 
+-- Lista atualizada: Hot Coffee, Healing Energy e Sand Road removidos
 local ListaPoderes = {
-    "1% Punch", "Sand Road", "Healing Energy", "Swine Explosion", 
-    "X Slice", "Rage Mode", "Unrefusable Order", "Hot Coffee", 
+    "1% Punch", "Swine Explosion", 
+    "X Slice", "Rage Mode", "Unrefusable Order", 
     "Guided Orbs", "Dismantle", "Charged Aura", "Pineapple Throw", 
     "Sailor's Aura", "Tidal Wave", "Ultimate Lifeform", 
     "Disk Slice", "Smoke Cover", "Discharge",
@@ -49,7 +50,7 @@ Mouse.Button1Down:Connect(function()
     end
 end)
 
--- ABA PRINCIPAL (Seu Código Original)
+-- ABA PRINCIPAL
 local PlayerDropdown = Tab:CreateDropdown({
    Name = "Selecionar Alvo",
    Options = {}, 
