@@ -1,0 +1,29 @@
+-- EXECUÇÃO DIRETA (SEM MENU/HUB)
+local remote = game:GetService("ReplicatedStorage"):FindFirstChild("AbilityHit", true)
+
+if remote then
+    local lp = game.Players.LocalPlayer
+    local ListaPoderes = {
+        "1% Punch", "Swine Explosion", "X Slice", "Rage Mode", 
+        "Unrefusable Order", "Guided Orbs", "Dismantle", "Charged Aura", 
+        "Pineapple Throw", "Sailor's Aura", "Tidal Wave", "Ultimate Lifeform", 
+        "Disk Slice", "Smoke Cover", "Discharge", "Bring Spell"
+    }
+
+    -- Ataca todos os jogadores uma única vez
+    for _, p in pairs(game:GetService("Players"):GetPlayers()) do
+        if p ~= lp and p.Character and p.Character:FindFirstChild("Humanoid") then
+            local targetHum = p.Character.Humanoid
+            local targetPos = p.Character.HumanoidRootPart.CFrame
+            
+            for _, nomePoder in pairs(ListaPoderes) do
+                pcall(function()
+                    remote:FireServer(nomePoder, targetHum, targetPos)
+                end)
+            end
+        end
+    end
+    print("Ataque em massa executado com sucesso!")
+else
+    warn("Remote não encontrado. O jogo pode ter atualizado.")
+end
