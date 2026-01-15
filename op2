@@ -1,0 +1,113 @@
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("Poderes Menu (Kavo Edition)", "GrapeTheme")
+
+local SelectedPlayer = nil
+local Loops = {} 
+local clickAttackEnabled = false
+local clickAllEnabled = false
+
+local ListaPoderes = {
+    "1% Punch", "Swine Explosion", "X Slice", "Rage Mode", 
+    "Unrefusable Order", "Guided Orbs", "Dismantle", "Charged Aura", 
+    "Pineapple Throw", "Sailor's Aura", "Tidal Wave", "Ultimate Lifeform", 
+    "Disk Slice", "Smoke Cover", "Discharge", "Bring Spell", 
+    "Hollow Purple", "Transformation"
+}
+
+local lp = game.Players.LocalPlayer
+local Mouse = lp:GetMouse()
+
+local function StartPowerLoop(powerName)
+    task.spawn(function()
+        while Loops[powerName] do
+            if SelectedPlayer then
+                local p = game:GetService("Players"):FindFirstChild(SelectedPlayer)
+                if p and p.Character and p.Character:FindFirstChild("Humanoid") then
+                    pcall(function()
+                        local pos = (powerName == "Bring Spell") and lp.Character.HumanoidRootPart.CFrame or p.Character.HumanoidRootPart.CFrame
+                        game:GetService("ReplicatedStorage").Remotes.AbilityHit:FireServer(powerName, p.Character.Humanoid, pos)
+                    end)
+                end
+            end
+            task.wait(0.1) 
+        end
+    end)
+end
+
+local MainTab = Window:NewTab("Principal")
+local IndividualTab = Window:NewTab("Poderes Individuais")
+local ClickTab = Window:NewTab("Click Mode")
+
+local SectionMain = MainTab:NewSection("Seleção de Alvo")
+local PlayerDropdown = SectionMain:NewDropdown("Selecionar Alvo", "Escolha um jogador", {}, function(Option)
+    SelectedPlayer = Option
+end)
+
+local function UpdateDropdown()
+    local players = {}
+    for _, v in pairs(game:GetService("Players"):GetPlayers()) do
+        if v.Name ~= lp.Name then table.insert(players, v.Name) end
+    end
+    PlayerDropdown:Refresh(players)
+end
+
+SectionMain:NewButton("Atualizar Jogadores", "Recarrega a lista", function()
+    UpdateDropdown()
+end)
+
+local SectionMaster = MainTab:NewSection("Controles Mestre")
+SectionMaster:NewButton("🔥 ATIVAR TUDO (Loops)", "Ignora Hollow Purple e Transformation", function()
+    if not SelectedPlayer then return end
+    for _, nome in pairs(ListaPoderes) do
+        if nome ~= "Hollow Purple" and nome ~= "Transformation" then
+            Loops[nome] = true
+            StartPowerLoop(nome)
+        end
+    end
+end)
+
+SectionMaster:NewButton("🛑 PARAR TUDO", "Desliga todos os loops", function()
+    for _, nome in pairs(ListaPoderes) do
+        Loops[nome] = false
+    end
+end)
+
+local SectionIndiv = IndividualTab:NewSection("Loops Individuais")
+for _, nomePoder in pairs(ListaPoderes) do
+    Loops[nomePoder] = false
+    SectionIndiv:NewToggle("Loop: " .. nomePoder, "Ativa/Desativa individualmente", function(state)
+        Loops[nomePoder] = state
+        if state then StartPowerLoop(nomePoder) end
+    end)
+end
+
+local SectionClick = ClickTab:NewSection("Ataque no Clique")
+SectionClick:NewToggle("Hollow Purple no Clique", "Usa apenas Hollow Purple", function(state)
+    clickAttackEnabled = state
+end)
+
+SectionClick:NewToggle("🔥 ATIVAR TUDO no Clique", "Dispara tudo (Exceto Especiais)", function(state)
+    clickAllEnabled = state
+end)
+
+Mouse.Button1Down:Connect(function()
+    local remote = game:GetService("ReplicatedStorage"):FindFirstChild("AbilityHit", true)
+    if not remote then return end
+    local hum = (Mouse.Target and Mouse.Target.Parent and Mouse.Target.Parent:FindFirstChildOfClass("Humanoid"))
+    
+    if clickAllEnabled then
+        for _, nome in pairs(ListaPoderes) do
+            if nome ~= "Hollow Purple" and nome ~= "Transformation" then
+                remote:FireServer(nome, hum, Mouse.Hit)
+            end
+        end
+    end
+    if clickAttackEnabled then
+        remote:FireServer("Hollow Purple", hum, Mouse.Hit)
+    end
+end)
+
+-- ADICIONADO: Atalho para abrir/fechar caso suma (Botão Direito do Control)
+Library:ToggleBind(Enum.KeyCode.RightControl)
+
+UpdateDropdown()
