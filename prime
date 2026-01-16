@@ -1,4 +1,3 @@
--- Carregar Fluent e Addons
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
@@ -17,7 +16,7 @@ local Window = Fluent:CreateWindow({
 -- Criar Abas
 local Tabs = {
     Cela = Window:AddTab({ Title = "Cela [🔊VC]", Icon = "" }),
-    Tools = Window:AddTab({ Title = "Tools", Icon = "package" }), -- ✅ Nova Aba
+    Tools = Window:AddTab({ Title = "Tools", Icon = "package" }),
     Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
 }
 
@@ -68,6 +67,7 @@ local function createEquipToggle(tab, itemName, emoji)
 end
 
 -- 🔹 Toggles na aba Cela
+createEquipToggle(Tabs.Cela, "Dodge Ball", "🏐") -- ✅ Adicionado: Dodge Ball
 createEquipToggle(Tabs.Cela, "Kick", "🦶")
 createEquipToggle(Tabs.Cela, "Lasso", "🤠")
 createEquipToggle(Tabs.Cela, "Mimic Potion", "🪞")
@@ -84,7 +84,6 @@ local function AtivarToolsLoop()
     if not LocalPlayer.Character then return end
     for _, tool in ipairs(LocalPlayer.Character:GetChildren()) do
         if tool:IsA("Tool") then
-            tool.Parent = LocalPlayer.Character
             pcall(function() tool:Activate() end)
         end
     end
@@ -104,7 +103,7 @@ loopToggle:OnChanged(function(state)
         task.spawn(function()
             while loopTools do
                 AtivarToolsLoop()
-                task.wait(0.1) -- Delay entre ativações
+                task.wait(0.1)
             end
         end)
     end
