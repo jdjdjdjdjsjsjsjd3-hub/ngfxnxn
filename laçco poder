@@ -1,0 +1,86 @@
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("Lasso AUTO-TARGET", "DarkTheme")
+
+-- Configuração da Tecla para abrir/fechar (Padrão: F)
+local OpenKey = Enum.KeyCode.F
+
+local Tab = Window:NewTab("Lasso")
+local Section = Tab:NewSection("Configuração de Alvos")
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Alvos Fixos
+local TargetNames = {"Sway7520", "yskckxkkf", "LilCalv026sutt", "aez4kmi99"}
+local ManualTarget = nil
+
+Section:NewLabel("Alvos Fixos: Sway, ysk, LilCalv, aez4k")
+
+-- KEYBIND PARA ABRIR/FECHAR MENU
+Section:NewKeybind("Abrir/Fechar Menu", "Tecla para ocultar o menu", OpenKey, function()
+	Library:ToggleUI()
+end)
+
+-- SELETOR VIA TEXTBOX (Evita bugs de interface)
+Section:NewTextBox("Adicionar Alvo Manual", "Digite o nome e aperte Enter", function(txt)
+    local found = nil
+    for _, v in pairs(Players:GetPlayers()) do
+        if v.Name:lower():sub(1, #txt) == txt:lower() then
+            found = v.Name
+            break
+        end
+    end
+    
+    if found then
+        ManualTarget = found
+        Library:Notify("Alvo Definido", "Focando extra em: " .. found, 3)
+    else
+        Library:Notify("Erro", "Jogador não encontrado", 2)
+    end
+end)
+
+Section:NewButton("Limpar Alvo Manual", "Focar apenas nos 4 alvos fixos", function()
+    ManualTarget = nil
+    Library:Notify("Limpo", "Alvo manual removido", 2)
+end)
+
+-- LOOP PRINCIPAL (Sempre rodando em background)
+task.spawn(function()
+    while true do
+        task.wait(0.25)
+
+        pcall(function()
+            local char = LocalPlayer.Character
+            local lasso = char and char:FindFirstChild("Lasso")
+            
+            if lasso then
+                local rf = lasso:FindFirstChild("RemoteFunction")
+                if not rf then return end
+
+                local function FireLasso(name)
+                    local target = Players:FindFirstChild(name)
+                    if target and target.Character then
+                        local leg = target.Character:FindFirstChild("LeftLowerLeg")
+                        if leg then
+                            rf:InvokeServer(Vector3.new(0.665, -0.729, 0.158), {
+                                Target = leg,
+                                TargetSurface = Enum.NormalId.Right,
+                                Hit = leg.CFrame
+                            })
+                        end
+                    end
+                end
+
+                -- Loop nos 4 alvos automáticos
+                for _, name in pairs(TargetNames) do
+                    FireLasso(name)
+                end
+
+                -- Ataca o alvo manual se houver um
+                if ManualTarget then
+                    FireLasso(ManualTarget)
+                end
+            end
+        end)
+    end
+end)
