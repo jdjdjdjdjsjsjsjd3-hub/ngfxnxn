@@ -1,0 +1,86 @@
+local Kavo = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+
+-- Escolha a tecla para abrir/fechar aqui (ex: Enum.KeyCode.RightControl)
+local abrirFecharKey = Enum.KeyCode.RightControl
+
+local window = Kavo.CreateLib("Dodgeball Pro + Mouse", "Midnight")
+
+-- Configurações
+local p = game.Players.LocalPlayer
+local mouse = p:GetMouse()
+local config = {
+    ativo = false,
+    delay = 0.1,
+    modoMouse = false,
+    direcaoFixa = vector.create(-0.7740467190742493, -0.2567793130874634, -0.5787192583084106)
+}
+
+-- Aba Principal
+local main = window:NewTab("Principal")
+local section = main:NewSection("Controles")
+
+-- LOOP DE DISPARO (Otimizado)
+task.spawn(function()
+    while true do
+        if config.ativo then
+            local char = p.Character
+            local ball = char and char:FindFirstChild("Dodge Ball")
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            
+            if ball and hrp then
+                local direcaoFinal
+                
+                if config.modoMouse then
+                    -- Direção calculada: Do personagem para o Mouse
+                    local diff = (mouse.Hit.p - hrp.Position)
+                    direcaoFinal = Vector3.new(diff.X, diff.Y, diff.Z).Unit
+                else
+                    direcaoFinal = config.direcaoFixa
+                end
+
+                local args = {
+                    direcaoFinal,
+                    {
+                        Target = workspace:WaitForChild("Map"):WaitForChild("Courtyard"):WaitForChild("FootballFence"):WaitForChild("Part"),
+                        TargetSurface = Enum.NormalId.Left,
+                        Hit = mouse.Hit
+                    }
+                }
+                
+                task.spawn(function()
+                    ball.RemoteFunction:InvokeServer(unpack(args))
+                end)
+            end
+        end
+        task.wait(config.delay)
+    end
+end)
+
+--- INTERFACE KAVO ---
+
+-- Toggle para o Loop
+section:NewToggle("Auto Throw Loop", "Ativa o disparo contínuo", function(state)
+    config.ativo = state
+end)
+
+-- Toggle para o Mouse
+section:NewToggle("Seguir Mouse", "Atira para onde você aponta o mouse", function(state)
+    config.modoMouse = state
+end)
+
+-- Tecla para Abrir/Fechar o Menu (Visual)
+section:NewKeybind("Abrir/Fechar Menu", "Tecla padrão: RightControl", abrirFecharKey, function()
+    Kavo:ToggleUI()
+end)
+
+-- Slider de Velocidade
+section:NewSlider("Velocidade (Delay)", "Menor = Mais rápido", 100, 1, function(s)
+    config.delay = s / 100
+end)
+
+local configSection = main:NewSection("Config de Direção")
+
+configSection:NewButton("Resetar Direção Fixa", "Volta para a cerca de futebol", function()
+    config.modoMouse = false
+    config.direcaoFixa = vector.create(-0.7740467190742493, -0.2567793130874634, -0.5787192583084106)
+end)
