@@ -1,0 +1,148 @@
+-- Carregar Fluent e Addons
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+
+-- Criar Janela Principal
+local Window = Fluent:CreateWindow({
+    Title = "Fluent Hub " .. Fluent.Version,
+    SubTitle = "by dawid",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(580, 460),
+    Acrylic = true,
+    Theme = "Dark",
+    MinimizeKey = Enum.KeyCode.LeftControl
+})
+
+-- Criar Abas
+local Tabs = {
+    Cela = Window:AddTab({ Title = "Cela [🔊VC]", Icon = "" }),
+    Tools = Window:AddTab({ Title = "Tools", Icon = "package" }), -- ✅ Nova Aba
+    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" })
+}
+
+-- Configurar Addons
+SaveManager:SetLibrary(Fluent)
+InterfaceManager:SetLibrary(Fluent)
+InterfaceManager:SetFolder("FluentHub")
+SaveManager:SetFolder("FluentHub/GameConfigs")
+SaveManager:IgnoreThemeSettings()
+
+-- Referência aos RemoteEvents
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local handlers = ReplicatedStorage:WaitForChild("EventHandlers")
+local equipRemote = handlers:WaitForChild("EquipItem")
+local unequipRemote = handlers:WaitForChild("UnequipItem")
+
+-- Função utilitária para criar toggles com emojis
+local function createEquipToggle(tab, itemName, emoji)
+    local toggle = tab:AddToggle("AutoEquip_" .. itemName, {
+        Title = emoji .. " Auto-Equipar " .. itemName,
+        Description = "Ativar para equipar automaticamente o " .. itemName,
+        Default = false
+    })
+
+    toggle:OnChanged(function(state)
+        pcall(function()
+            if state then
+                equipRemote:InvokeServer(itemName, "Tools")
+                Fluent:Notify({
+                    Title = emoji .. " Equipado",
+                    Content = itemName .. " foi equipado automaticamente!",
+                    Duration = 5
+                })
+            else
+                unequipRemote:InvokeServer(itemName, "Tools")
+                Fluent:Notify({
+                    Title = emoji .. " Desequipado",
+                    Content = itemName .. " foi desequipado automaticamente!",
+                    Duration = 5
+                })
+            end
+        end)
+    end)
+
+    return toggle
+end
+
+-- 🔹 Toggles na aba Cela
+createEquipToggle(Tabs.Cela, "Kick", "🦶")
+createEquipToggle(Tabs.Cela, "Lasso", "🤠")
+createEquipToggle(Tabs.Cela, "Mimic Potion", "🪞")
+createEquipToggle(Tabs.Cela, "Dance Potion", "💃")
+createEquipToggle(Tabs.Cela, "Shrink Potion", "🪄🔽")
+createEquipToggle(Tabs.Cela, "Growth Potion", "🪄🔼")
+createEquipToggle(Tabs.Cela, "Boom Box", "📻")
+createEquipToggle(Tabs.Cela, "Spray Can", "🎨")
+
+----------------------------------------------------
+-- 🔹 Função: Ativar loop de Tools
+----------------------------------------------------
+local function AtivarToolsLoop()
+    if not LocalPlayer.Character then return end
+    for _, tool in ipairs(LocalPlayer.Character:GetChildren()) do
+        if tool:IsA("Tool") then
+            tool.Parent = LocalPlayer.Character
+            pcall(function() tool:Activate() end)
+        end
+    end
+end
+
+-- 🔹 Loop Tools
+local loopTools = false
+local loopToggle = Tabs.Tools:AddToggle("LoopTools", {
+    Title = "🔁 Loop Tools",
+    Description = "Liga/Desliga o loop de usar todas as ferramentas do personagem",
+    Default = false
+})
+
+loopToggle:OnChanged(function(state)
+    loopTools = state
+    if loopTools then
+        task.spawn(function()
+            while loopTools do
+                AtivarToolsLoop()
+                task.wait(0.1) -- Delay entre ativações
+            end
+        end)
+    end
+end)
+
+-- 🔹 Não Sentar
+local noSit = false
+local noSitToggle = Tabs.Tools:AddToggle("NoSit", {
+    Title = "🚫 Não Sentar",
+    Description = "Impede que seu personagem sente em cadeiras/bancos",
+    Default = false
+})
+
+noSitToggle:OnChanged(function(state)
+    noSit = state
+    if noSit then
+        task.spawn(function()
+            while noSit do
+                pcall(function()
+                    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                        LocalPlayer.Character.Humanoid.Sit = false
+                    end
+                end)
+                task.wait(0.1)
+            end
+        end)
+    end
+end)
+
+-- Mostrar notificação inicial
+Fluent:Notify({
+    Title = "Fluent Hub 🎉",
+    Content = "Interface carregada com sucesso!",
+    Duration = 6
+})
+
+-- Configurações e AutoLoad
+InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+SaveManager:BuildConfigSection(Tabs.Settings)
+Window:SelectTab(1)
+SaveManager:LoadAutoloadConfig()
