@@ -1,0 +1,62 @@
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("🎵 Boombox HUB", "DarkTheme")
+
+-- Tabelas de músicas para facilitar a manutenção
+local songs = {
+    {name = "risada faz como", id = "140713372459057", featured = true},
+    {name = "tu é um beta", id = "100879595974514"},
+    {name = "lula e alexandre", id = "133885860917947"},
+    {name = "ze da manga", id = "105648540728010"},
+    {name = "Flamengo", id = "83209327610828"},
+    {name = "geme meu nome falando DUDU", id = "129751173555656"},
+    {name = "ai-chega-chega", id = "96649978398443"},
+    {name = "calaboca kenga", id = "86494561679259"},
+    {name = "voce usa calcinha", id = "87039915590604"},
+    {name = "Ai bolsonaro", id = "98862691146008"},
+    {name = "VOU LHE PEGAR", id = "88325349207422"},
+    {name = "TO COM FOME BLUEZAO", id = "94183394213915"},
+    {name = "acerta-o-ferro", id = "72707275458250"},
+    {name = "gay gay", id = "71574026200484"},
+    {name = "macaco bravo", id = "7196237097"},
+    {name = "macaco calmo", id = "7669333539"},
+    {name = "posso te ligar agora ou sua muie ta perto", id = "103211341252816"},
+    {name = "vai tomar no cu macaco", id = "74242200873263"}
+}
+
+-- Função pra tocar música
+local function PlaySong(id)
+    local args = {"PlaySong", id}
+    local char = game:GetService("Players").LocalPlayer.Character
+    if char and char:FindFirstChild("Boom Box") then
+        char:WaitForChild("Boom Box"):WaitForChild("Remote"):FireServer(unpack(args))
+    else
+        Library:Notify("Erro", "Nenhum Boombox encontrado no personagem!", 3)
+    end
+end
+
+-- --- ABA 1: PLAYER ---
+local Tab1 = Window:NewTab("Player")
+local Section1 = Tab1:NewSection("Player de Música")
+
+for _, song in pairs(songs) do
+    local label = song.featured and "🔥 TOCAR: " .. song.name:upper() .. " 🔥" or "Tocar: " .. song.name
+    Section1:NewButton(label, "Toca esta música no Boombox", function()
+        PlaySong(song.id)
+    end)
+end
+
+Section1:NewTextBox("ID Customizado", "Digite um ID para tocar", function(txt)
+    if tonumber(txt) then PlaySong(txt) end
+end)
+
+-- --- ABA 2: COPIAR IDS ---
+local Tab2 = Window:NewTab("Copiar IDs")
+local Section2 = Tab2:NewSection("Clique para copiar o ID")
+
+for _, song in pairs(songs) do
+    local label = song.featured and "⭐ COPIAR: " .. song.name:upper() or "Copiar: " .. song.name
+    Section2:NewButton(label, "ID: " .. song.id, function()
+        setclipboard(song.id)
+        Library:Notify("Copiado!", "ID " .. song.id .. " copiado para a área de transferência.", 2)
+    end)
+end
