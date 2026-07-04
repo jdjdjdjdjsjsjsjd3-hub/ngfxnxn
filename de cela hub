@@ -1,0 +1,34 @@
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
+local Window = Library.CreateLib("Companheiros de cela [🔊VC]", "Midnight")
+
+-- ABA PRINCIPAL
+local Tab = Window:NewTab("Scripts")
+local Section = Tab:NewSection("Funções Principais")
+
+-- 1º LUGAR: Botão Prime
+Section:NewButton("Prime", "Executa o script Prime", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/jdjdjdjdjsjsjsjd3-hub/ngfxnxn/refs/heads/main/prime"))()
+end)
+
+-- Botão BombX
+Section:NewButton("Carregar BombX", "Executa o script de bomba", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/jdjdjdjdjsjsjsjd3-hub/ngfxnxn/refs/heads/main/bombx"))()
+end)
+
+-- Botão Bola Spam Disparo
+Section:NewButton("Bola Spam Disparo", "Executa o script de poder de bola", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/jdjdjdjdjsjsjsjd3-hub/ngfxnxn/refs/heads/main/bola%20poder"))()
+end)
+
+-- Botão Laço Spam Poder
+Section:NewButton("Laço Spam Poder", "Executa o script de poder de laço", function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/jdjdjdjdjsjsjsjd3-hub/ngfxnxn/refs/heads/main/la%C3%A7co%20poder"))()
+end)
+
+-- ABA DE CONFIGURAÇÃO (Keybind)
+local ConfigTab = Window:NewTab("Config")
+local ConfigSection = ConfigTab:NewSection("Controles")
+
+ConfigSection:NewKeybind("Abrir/Fechar Menu", "Tecla padrão: RightShift", Enum.KeyCode.RightShift, function()
+	Library:ToggleUI()
+end)
